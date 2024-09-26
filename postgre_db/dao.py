@@ -1,3 +1,4 @@
+import traceback
 from typing import List
 from sqlalchemy.future import select
 from postgre_db.crud import async_session
@@ -21,6 +22,7 @@ class BaseDAO:
                 result = await session.execute(select(cls.model).filter_by(**filters))
                 return result.scalar_one_or_none()
             except Exception as ex:
+                # tb = traceback.format_exc()
                 logger.error(f'Error in DAO get_one: {ex}')
 
     @classmethod
@@ -42,4 +44,3 @@ class NoteDAO(BaseDAO):
 
 class UserDAO(BaseDAO):
     model = User
-

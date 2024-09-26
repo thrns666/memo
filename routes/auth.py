@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+import traceback
+
+from fastapi import APIRouter, HTTPException, Depends, Form
 from loguru import logger
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,16 +8,15 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.templating import Jinja2Templates
-
-from celery_config.celery_tasks import send_mail_with_pass
+from celery_config.tasks import send_mail_with_pass
 from postgre_db import crud
 from postgre_db.crud import get_session
 from postgre_db.dao import UserDAO
 from postgre_db.schemas import LoginUser, RegisterUser
-from redis_config.redis_crud import get_from_redis
 
 auth_router = APIRouter()
 templates = Jinja2Templates(directory='static/templates')
+
 
 # user: Пароль для входа на почту smtp -> jwt token expire == 60*1440(24h) header/cookie
 # guest: create jwt token(expire == 60*20) -> anonym note expire(24h) stash from postgres
@@ -27,15 +28,24 @@ async def login_user(request: Request):
 
 
 @auth_router.post('/login')
-async def login(request: Request, data: LoginUser):
+async def login(request: Request, data: LoginUser = Form()):
     try:
-        user = UserDAO.get_one_or_none(email=data.email)
-        if user:
-            await send_mail_with_pass(data.email)
-        context = {'test': 'context'}                           # mb in headers put email login??????
-        return templates.TemplateResponse(request=request, name='login_form_1.html', context=context, status_code=200)
+        user = await UserDAO.get_one_or_none(email=data.email)
+        print(user)
+        if not user:
+            raise ValueError
+        send_mail_with_pass.apply_async(args=[data.email])
+        context = {'test': 'context'}  # mb in headers put email login??????
+        return templates.TemplateResponse(
+            request=request,
+            name='login_page_1.html',
+            context=context,
+            status_code=200,
+            headers={'user': data.email}
+        )
     except Exception as ex:
-        logger.error(f'Error in login user: {ex}')
+        tb = traceback.format_exc()
+        logger.error(f'Error in login user: {ex} -- {tb}')
         return HTTPException(status_code=500, detail=ex)
 
 

@@ -8,23 +8,23 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
-    __tablename__ = 'auth_users'
+    __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30), unique=True)
     email: Mapped[str] = mapped_column(String(50), unique=True)
-    notes: Mapped[List['Note']] = relationship(back_populates='user', cascade='all, delete-orphan')
+    notes: Mapped[List['Note']] = relationship(back_populates='owner', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'{self.name} ** {self.id}'
 
 
 class Note(Base):
-    __tablename__ = 'notes'
+    __tablename__ = 'note_table'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(String(1000), default='')
-    owner_id: Mapped[int] = mapped_column(ForeignKey('auth_users.id'))
+    owner_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     owner: Mapped['User'] = relationship(back_populates='notes')
 
     def __repr__(self):
