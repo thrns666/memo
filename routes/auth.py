@@ -1,18 +1,17 @@
 import traceback
-
 from fastapi import APIRouter, HTTPException, Depends, Form
 from loguru import logger
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 from celery_config.tasks import send_mail_with_pass
 from postgre_db import crud
-from postgre_db.crud import get_session
 from postgre_db.dao import UserDAO
 from postgre_db.schemas import LoginUser, RegisterUser
+from redis_config.redis_crud import get_session
 
 auth_router = APIRouter()
 templates = Jinja2Templates(directory='static/templates')
@@ -22,7 +21,7 @@ templates = Jinja2Templates(directory='static/templates')
 # guest: create jwt token(expire == 60*20) -> anonym note expire(24h) stash from postgres
 
 
-@auth_router.get('/login')
+@auth_router.get('/login', response_class=HTMLResponse)
 async def login_user(request: Request):
     return templates.TemplateResponse(request=request, name='login_page_0.html', status_code=200)
 
@@ -35,26 +34,40 @@ async def login(request: Request, data: LoginUser = Form()):
         if not user:
             raise ValueError
         send_mail_with_pass.apply_async(args=[data.email])
+        url = request.url_for('get_password')
+        print(url)
         context = {'test': 'context'}  # mb in headers put email login??????
-        return templates.TemplateResponse(
-            request=request,
-            name='login_page_1.html',
-            context=context,
-            status_code=200,
-            headers={'user': data.email}
-        )
+        response = RedirectResponse(url=url, headers={'user': data.email}, status_code=status.HTTP_202_ACCEPTED)
+        return response
     except Exception as ex:
         tb = traceback.format_exc()
         logger.error(f'Error in login user: {ex} -- {tb}')
         return HTTPException(status_code=500, detail=ex)
 
 
+@auth_router.get('/password', response_class=HTMLResponse)
+async def get_password(request: Request):
+    user_email = request.headers.get('user')
+    print(user_email)
+    context = {'user_email': f'{user_email}'}
+    return templates.TemplateResponse(
+            request=request,
+            name='login_page_1.html',
+            context=context,
+            status_code=200,
+    )#headers={'user_emai0': user_email}
+        # )
+
+
 @auth_router.post('/password')
-async def check_password(email: EmailStr, password: str):
-    res = get_from_redis(email)
-    if res and res == password:
-        jwt_token = 'create_jwt_token(expire=24h)'
-        return 'Response(headers=jwt_token)'
+async def check_password(request: Request, password: str = Form()):
+    user = request.headers.get('user_email')
+    res = await get_session(user)
+    print(f'***{res} -- {password}')
+    return 'succs auth'
+    # if res and res == password:
+    #     jwt_token = 'create_jwt_token(expire=24h)'
+    #     return 'Response(headers=jwt_token)'
 
 
 @auth_router.post('/create_user')
