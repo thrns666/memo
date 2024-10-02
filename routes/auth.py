@@ -1,14 +1,17 @@
+import datetime
 import traceback
+
+import jwt
 from fastapi import APIRouter, HTTPException, Depends, Form
+from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 from pydantic import EmailStr
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse, HTMLResponse
+from starlette.responses import JSONResponse, RedirectResponse, HTMLResponse, Response
 from starlette.templating import Jinja2Templates
+
 from celery_config.tasks import send_mail_with_pass
-from postgre_db import crud
 from postgre_db.dao import UserDAO
 from postgre_db.schemas import LoginUser, RegisterUser
 from redis_config.redis_crud import get_session
@@ -16,9 +19,30 @@ from redis_config.redis_crud import get_session
 auth_router = APIRouter()
 templates = Jinja2Templates(directory='static/templates')
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
+SECRET_KEY = 'hzcho'
+ALGORITHM = 'HS256'
 
-# user: Пароль для входа на почту smtp -> jwt token expire == 60*1440(24h) header/cookie
+
 # guest: create jwt token(expire == 60*20) -> anonym note expire(24h) stash from postgres
+
+
+def create_jwt_token(data: dict):
+    return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_user_from_token(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get('sub')
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token has expire', headers={
+            'WWW-Authenticate': 'Bearer'
+        })
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token', headers={
+            'WWW-Authenticate': 'Bearer'
+        })
 
 
 @auth_router.get('/login', response_class=HTMLResponse)
@@ -26,54 +50,58 @@ async def login_user(request: Request):
     return templates.TemplateResponse(request=request, name='login_page_0.html', status_code=200)
 
 
-@auth_router.post('/login')
+@auth_router.post('/login', response_class=RedirectResponse)
 async def login(request: Request, data: LoginUser = Form()):
     try:
         user = await UserDAO.get_one_or_none(email=data.email)
-        print(user)
         if not user:
-            raise ValueError
+            logger.info(f'User {data.email} not found')
+            return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found')
+
         send_mail_with_pass.apply_async(args=[data.email])
         url = request.url_for('get_password')
-        print(url)
-        context = {'test': 'context'}  # mb in headers put email login??????
-        response = RedirectResponse(url=url, headers={'user': data.email}, status_code=status.HTTP_202_ACCEPTED)
-        return response
+        return RedirectResponse(url=f'{url}?email={data.email}', status_code=status.HTTP_307_TEMPORARY_REDIRECT)
     except Exception as ex:
         tb = traceback.format_exc()
         logger.error(f'Error in login user: {ex} -- {tb}')
         return HTTPException(status_code=500, detail=ex)
 
 
-@auth_router.get('/password', response_class=HTMLResponse)
-async def get_password(request: Request):
-    user_email = request.headers.get('user')
-    print(user_email)
-    context = {'user_email': f'{user_email}'}
+@auth_router.post('/password', response_class=HTMLResponse)
+async def get_password(request: Request, email: EmailStr):
     return templates.TemplateResponse(
-            request=request,
-            name='login_page_1.html',
-            context=context,
-            status_code=200,
-    )#headers={'user_emai0': user_email}
-        # )
+        request=request,
+        name='login_page_1.html',
+        context={'user_email': f'{email}'},
+        status_code=200,
+    )
 
 
-@auth_router.post('/password')
-async def check_password(request: Request, password: str = Form()):
-    user = request.headers.get('user_email')
-    res = await get_session(user)
-    print(f'***{res} -- {password}')
-    return 'succs auth'
-    # if res and res == password:
-    #     jwt_token = 'create_jwt_token(expire=24h)'
-    #     return 'Response(headers=jwt_token)'
+@auth_router.post('/check_password')
+async def check_password(request: Request, email: str = Form(), password: str = Form()):
+    res: bytes = await get_session(email)
+
+    if not res.decode() == password:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Wrong password')
+
+    headers = {'access_token': create_jwt_token(
+        {
+            'sub': {
+                'email': email
+            },
+            'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
+        }
+    ),
+        'token_type': 'bearer'}
+
+    return Response(headers=headers)
+    # return templates.TemplateResponse('sucss_login.html', {'request': request, 'headers': headers})
 
 
 @auth_router.post('/create_user')
-async def create_user(data: RegisterUser, session: AsyncSession = Depends(get_session)):
+async def create_user(data: RegisterUser):
     try:
-        await crud.create_user(session=session, name=data.name, email=data.email)
+        # await crud.create_user(session=session, name=data.name, email=data.email)
         logger.info(f'Created new user: {data.name} - {data.email}')
         # celery_config task sends mail???
     except Exception as ex:
@@ -81,30 +109,6 @@ async def create_user(data: RegisterUser, session: AsyncSession = Depends(get_se
 
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={'data': [_ for _ in data]})
 
-###############
-# def create_jwt_token(data: dict):
-#     return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
-#
-#
-# def get_user_from_token(token: str = Depends(oauth2_scheme)):
-#         try:
-#             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#             return payload.get('sub')
-#         except jwt.ExpiredSignatureError:
-#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token has expire', headers={
-#                 'WWW-Authenticate': 'Bearer'
-#             })
-#         except jwt.InvalidTokenError:
-#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token', headers={
-#                 'WWW-Authenticate': 'Bearer'
-#             })
-#
-#
-# def decode_password(hashed_password: str):
-#     if hashed_password[:-15]:
-#         return hashed_password[:-15]
-#
-#
 # @auth.post('/token')
 # async def login(user_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
 #     user_data_from_db: models.User = crud.get_user(db=db, email=user_data.username)

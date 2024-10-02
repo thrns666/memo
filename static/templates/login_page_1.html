@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <form class="form" action="" method="post">
-        <p>Enter password for {{user_email}}</p>
+    <form class="form" action="../auth/check_password" method="post">
+        <p>Enter password for {{ user_email }}</p>
+      <input type="hidden" name="email" value="{{ user_email }}">
       <input name="password" class="input" type="text" placeholder="000-000">
       <button class="btn" type="submit">Sign in</button>
     </form>

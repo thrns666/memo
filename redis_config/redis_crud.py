@@ -8,10 +8,10 @@ async def connect_to_redis():
     return await redis.Redis(host='localhost', port=6379, db=0)
 
 
-async def get_session(data: RedisLoginData):
+async def get_session(email: str):
     redis_client = await connect_to_redis()
     try:
-        result = await redis_client.get(data.email)
+        result = await redis_client.get(email)
 
         if result:
             logger.info(f'Get session in redis: {result}')

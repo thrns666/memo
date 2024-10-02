@@ -7,9 +7,10 @@ uvicorn~=0.30.6
 python-dotenv~=1.0.1
 redis~=5.0.8
 celery~=5.4.0
-aiosmtplib
+aiosmtplib~=3.0.2
 asyncpg
 pydantic_core
 jinja2
 python-multipart
 pydantic[email]
+PyJWT~=2.9.0
