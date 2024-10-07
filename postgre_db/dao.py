@@ -5,6 +5,8 @@ from postgre_db.crud import async_session
 from postgre_db.models import Note, User
 from loguru import logger
 
+from postgre_db.schemas import RegisterUser
+
 
 class BaseDAO:
     model = None
@@ -44,3 +46,17 @@ class NoteDAO(BaseDAO):
 
 class UserDAO(BaseDAO):
     model = User
+
+    @classmethod
+    async def create_user(cls, user_data: RegisterUser):
+        async with async_session() as session:
+            try:
+                user = User(name=user_data.name, email=user_data.email)
+                session.add(user)
+                await session.commit()
+
+                logger.info(f'Created new user: {user_data.email}')
+            except Exception as ex:
+                logger.error(f'Error in create_user: {ex}')
+
+                return

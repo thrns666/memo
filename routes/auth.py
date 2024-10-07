@@ -79,35 +79,74 @@ async def get_password(request: Request, email: EmailStr):
 
 @auth_router.post('/check_password')
 async def check_password(request: Request, email: str = Form(), password: str = Form()):
-    res: bytes = await get_session(email)
+    try:
+        res: bytes = await get_session(email)
+        if res.decode() != password:
+            return templates.TemplateResponse(
+                request=request,
+                name='login_page_1.html',
+                context={'result': f'Wrong password', 'user_email': email}
+            )
 
-    if not res.decode() == password:
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Wrong password')
+        headers = {'access_token': create_jwt_token(
+            {
+                'sub': {
+                    'email': email
+                },
+                'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
+            }
+        ),
+            'token_type': 'bearer'}
 
-    headers = {'access_token': create_jwt_token(
-        {
-            'sub': {
-                'email': email
-            },
-            'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
-        }
-    ),
-        'token_type': 'bearer'}
+        return templates.TemplateResponse(
+            request=request,
+            name='sucss_login.html',
+            context={'exmp': 'test successful login'},
+            status_code=status.HTTP_302_FOUND,
+            headers=headers
+        )
+    except Exception as ex:
+        logger.error(f'Error in check_password: {ex}')
 
-    return Response(headers=headers)
-    # return templates.TemplateResponse('sucss_login.html', {'request': request, 'headers': headers})
+        return templates.TemplateResponse(
+            request=request,
+            name='error_page.html',
+            context={'detail': ex},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@auth_router.get('/protected_resource')
+async def filter_us(current_user: dict = Depends(get_user_from_token)):
+    print(current_user)
+    if current_user:
+        return {1: current_user}
+
+
+@auth_router.get('/create_user')
+async def get_create_user(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name='create_user_page.html',
+        status_code=status.HTTP_200_OK
+    )
 
 
 @auth_router.post('/create_user')
-async def create_user(data: RegisterUser):
+async def create_user(request: Request, data: RegisterUser = Form()):
     try:
-        # await crud.create_user(session=session, name=data.name, email=data.email)
-        logger.info(f'Created new user: {data.name} - {data.email}')
-        # celery_config task sends mail???
-    except Exception as ex:
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'err': ex})
+        await UserDAO.create_user(data)
 
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content={'data': [_ for _ in data]})
+        # celery_config task sends notification mail (if this does not user -> delete account)
+        return templates.TemplateResponse(
+            request=request,
+            name='sucss_login.html',
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as ex:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'err': ex})
+
+
 
 # @auth.post('/token')
 # async def login(user_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
