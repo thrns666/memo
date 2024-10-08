@@ -8,10 +8,10 @@ from loguru import logger
 from pydantic import EmailStr
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse, HTMLResponse, Response
+from starlette.responses import RedirectResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from celery_config.tasks import send_mail_with_pass
+from celery_config.tasks import send_mail_with_pass, send_acceptance_mail
 from postgre_db.dao import UserDAO
 from postgre_db.schemas import LoginUser, RegisterUser
 from redis_config.redis_crud import get_session
@@ -91,7 +91,7 @@ async def check_password(request: Request, email: str = Form(), password: str = 
         headers = {'access_token': create_jwt_token(
             {
                 'sub': {
-                    'email': email
+                    'email': email,
                 },
                 'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
             }
@@ -136,37 +136,21 @@ async def get_create_user(request: Request):
 async def create_user(request: Request, data: RegisterUser = Form()):
     try:
         await UserDAO.create_user(data)
+        send_acceptance_mail.apply_async(args=[data.email])
 
-        # celery_config task sends notification mail (if this does not user -> delete account)
         return templates.TemplateResponse(
             request=request,
             name='sucss_login.html',
             status_code=status.HTTP_201_CREATED
         )
     except Exception as ex:
-        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'err': ex})
+        return templates.TemplateResponse(
+            request=request,
+            name='create_user_page.html',
+            context={'result': ex},
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
 
-
-
-# @auth.post('/token')
-# async def login(user_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
-#     user_data_from_db: models.User = crud.get_user(db=db, email=user_data.username)
-#     if user_data_from_db is None or user_data.password != decode_password(user_data_from_db.hashed_password):
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials', headers={
-#             'WWW-Authenticate': 'Bearer'
-#         })
-#     return {'access_toke': create_jwt_token(
-#         {
-#             'sub': {
-#                 'username': user_data_from_db.email,
-#                 'role': user_data_from_db.role
-#             },
-#             'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
-#         }
-#     ),
-#         'token_type': 'bearer'}
-#
-#
 # @auth.get('/token')
 # async def guest_token() -> dict:
 #     return {'guest_token': create_jwt_token({'sub': {'role': 'guest'}, 'exp': datetime.datetime.now(
@@ -178,11 +162,3 @@ async def create_user(request: Request, data: RegisterUser = Form()):
 #     if current_user['role'] == 'guest':
 #         return {'message': 'Welcome guest(U are not auth)'}
 #
-#
-# @auth.get('/protected_resource')
-# async def filter_us(current_user: dict = Depends(get_user_from_token)):
-#     print(current_user)
-#     if current_user['role'] == 'admin' or current_user == 'user':
-#         return {1: current_user}
-#     elif current_user['role'] == 'guest':
-#         raise InvalidRoleException()

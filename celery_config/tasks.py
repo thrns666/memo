@@ -3,7 +3,9 @@ import os
 import random
 from celery import Celery
 from dotenv import load_dotenv
-from SMTP.email_functions import send_email
+from pydantic import EmailStr
+
+from SMTP.email_functions import send_password_mail, send_accept_mail
 
 load_dotenv()
 
@@ -15,12 +17,23 @@ smtp_password = os.environ.get('smtp_password')
 
 
 @celery_app.task
-def send_mail_with_pass(email: str):
+def send_mail_with_pass(email: EmailStr):
     password = random.randint(100000, 999999)
+
     asyncio.run(
-        send_email(
+        send_password_mail(
             mail_to=email,
             user_pass=password,
+        )
+    )
+    return True
+
+
+@celery_app.task
+def send_acceptance_mail(email: EmailStr):
+    asyncio.run(
+        send_accept_mail(
+            mail_to=email
         )
     )
     return True

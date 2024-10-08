@@ -5,7 +5,7 @@ from postgre_db.crud import async_session
 from postgre_db.models import Note, User
 from loguru import logger
 
-from postgre_db.schemas import RegisterUser
+from postgre_db.schemas import RegisterUser, NoteData
 
 
 class BaseDAO:
@@ -42,6 +42,20 @@ class BaseDAO:
 
 class NoteDAO(BaseDAO):
     model = Note
+
+    @classmethod
+    async def create_note(cls, note_data: NoteData):
+        async with async_session() as session:
+            try:
+                note = Note(owner_id=note_data.name, text=note_data.text)
+                session.add(note)
+                await session.commit()
+
+                logger.info(f'Created new note: {note_data.owner_id}')
+            except Exception as ex:
+                logger.error(f'Error in create_note: {ex}')
+
+                return
 
 
 class UserDAO(BaseDAO):

@@ -10,7 +10,7 @@ class RegisterUser(BaseModel):
     email: EmailStr
 
 
-class Note(BaseModel):
+class NoteData(BaseModel):
     text: str
     owner_id: int
 

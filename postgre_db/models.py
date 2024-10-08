@@ -24,7 +24,7 @@ class Note(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(String(1000), default='')
-    owner_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    owner_email: Mapped[str] = mapped_column(ForeignKey('user.email'))
     owner: Mapped['User'] = relationship(back_populates='notes')
 
     def __repr__(self):
