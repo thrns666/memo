@@ -93,7 +93,7 @@ async def check_password(request: Request, email: str = Form(), password: str = 
                 'sub': {
                     'email': email,
                 },
-                'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=300)
+                'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=5000)
             }
         ),
             'token_type': 'bearer'}

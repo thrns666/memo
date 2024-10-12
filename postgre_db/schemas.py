@@ -11,8 +11,9 @@ class RegisterUser(BaseModel):
 
 
 class NoteData(BaseModel):
+    title: str
     text: str
-    owner_id: int
+    owner_email: EmailStr
 
 
 class VerifyCodeRequest(BaseModel):

@@ -14,3 +14,4 @@ jinja2
 python-multipart
 pydantic[email]
 PyJWT~=2.9.0
+alembic==1.13.3

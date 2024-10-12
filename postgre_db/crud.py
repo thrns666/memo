@@ -4,7 +4,7 @@ from typing import List, Sequence
 from dotenv import load_dotenv
 from sqlalchemy import URL, create_engine
 from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from postgre_db.models import User, Note, Base
 from loguru import logger
@@ -20,21 +20,21 @@ async_url = URL.create(
     password=os.environ.get('DB_PASS')
 )
 
-# sync_url = URL.create(
-#     drivername='postgresql+psycopg2',
-#     host=os.environ.get('DB_HOST'),
-#     port=os.environ.get('DB_PORT'),
-#     database=os.environ.get('DB_NAME'),
-#     username=os.environ.get('DB_USER'),
-#     password=os.environ.get('DB_PASS')
-# )
+sync_url = URL.create(
+    drivername='postgresql+psycopg2',
+    host=os.environ.get('DB_HOST'),
+    port=os.environ.get('DB_PORT'),
+    database=os.environ.get('DB_NAME'),
+    username=os.environ.get('DB_USER'),
+    password=os.environ.get('DB_PASS')
+)
 
 engine = create_async_engine(async_url)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+# async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
-
-# s_engine = create_engine(sync_url)
-# Base.metadata.create_all(bind=s_engine)
+s_engine = create_engine(sync_url)
+Base.metadata.create_all(bind=s_engine)
 
 
 async def get_session() -> AsyncSession:
