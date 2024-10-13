@@ -44,7 +44,7 @@ async def inv_token(request: Request, exc):
 
 @auth_router.get('/login', response_class=HTMLResponse)
 async def login_user(request: Request):
-    return templates.TemplateResponse(request=request, name='login_page_0.html', status_code=200)
+    return templates.TemplateResponse(request=request, name='login_page.html', status_code=200)
 
 
 @auth_router.post('/login', response_class=RedirectResponse)
@@ -68,7 +68,7 @@ async def login(request: Request, data: LoginUser = Form()):
 async def get_password(request: Request, email: EmailStr):
     return templates.TemplateResponse(
         request=request,
-        name='login_page_1.html',
+        name='login_page.html',
         context={'user_email': f'{email}'},
         status_code=200,
     )
@@ -81,7 +81,7 @@ async def check_password(request: Request, email: str = Form(), password: str = 
         if res.decode() != password:
             return templates.TemplateResponse(
                 request=request,
-                name='login_page_1.html',
+                name='login_page.html',
                 context={'result': f'Wrong password', 'user_email': email}
             )
 
