@@ -24,25 +24,22 @@ SECRET_KEY = 'hzcho'
 ALGORITHM = 'HS256'
 
 
-# guest: create jwt token(expire == 60*20) -> anonym note expire(24h) stash from postgres
-
-
 def create_jwt_token(data: dict):
     return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
 
 
 def get_user_from_token(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get('sub')
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token has expire', headers={
-            'WWW-Authenticate': 'Bearer'
-        })
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token', headers={
-            'WWW-Authenticate': 'Bearer'
-        })
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    return payload.get('sub')
+
+
+async def inv_token(request: Request, exc):
+    return templates.TemplateResponse(
+        request=request,
+        name='error_page.html',
+        context={'detail': exc},
+        status_code=status.HTTP_401_UNAUTHORIZED
+    )
 
 
 @auth_router.get('/login', response_class=HTMLResponse)

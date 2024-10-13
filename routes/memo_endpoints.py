@@ -55,12 +55,18 @@ async def get_note_by_id(request: Request, note_id: int, user: dict = Depends(ge
     try:
         res = await NoteDAO.get_one_or_none(id=note_id)
 
-        if res:
+        if not res:
             return templates.TemplateResponse(
                 request=request,
-                name='view_note_page.html',
-                context={'note': res, 'user': user['email']}
+                name='index_page.html',
+                context={'result': 'Note with this id does not exist'}
             )
+
+        return templates.TemplateResponse(
+            request=request,
+            name='view_note_page.html',
+            context={'note': res, 'user': user['email']}
+        )
     except Exception as ex:
         logger.error(f'Error in get_note_by_id: {ex}')
 

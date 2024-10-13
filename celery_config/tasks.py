@@ -19,21 +19,26 @@ smtp_password = os.environ.get('smtp_password')
 @celery_app.task
 def send_mail_with_pass(email: EmailStr):
     password = random.randint(100000, 999999)
-
-    asyncio.run(
-        send_password_mail(
-            mail_to=email,
-            user_pass=password,
+    try:
+        asyncio.run(
+            send_password_mail(
+                mail_to=email,
+                user_pass=password,
+            )
         )
-    )
-    return True
+        return True
+    except Exception as ex:
+        return ex
 
 
 @celery_app.task
 def send_acceptance_mail(email: EmailStr):
-    asyncio.run(
-        send_accept_mail(
-            mail_to=email
+    try:
+        asyncio.run(
+            send_accept_mail(
+                mail_to=email
+            )
         )
-    )
-    return True
+        return True
+    except Exception as ex:
+        return ex
