@@ -6,7 +6,7 @@ class LoginUser(BaseModel):
 
 
 class RegisterUser(BaseModel):
-    name: str
+    username: str
     email: EmailStr
 
 

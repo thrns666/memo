@@ -47,39 +47,9 @@ async def get_create_note(request: Request, user: dict = Depends(get_user_from_t
     )
 
 
-@memo_router.get('/all_notes/{note_id}')
-async def get_note_by_id(request: Request, note_id: int, user: dict = Depends(get_user_from_token)):
-    if not user:
-        return
-
-    try:
-        res = await NoteDAO.get_one_or_none(id=note_id)
-
-        if not res:
-            return templates.TemplateResponse(
-                request=request,
-                name='index_page.html',
-                context={'result': 'Note with this id does not exist'}
-            )
-
-        return templates.TemplateResponse(
-            request=request,
-            name='view_note_page.html',
-            context={'note': res, 'user': user['email']}
-        )
-    except Exception as ex:
-        logger.error(f'Error in get_note_by_id: {ex}')
-
-        return templates.TemplateResponse(
-            request=request,
-            name='error_page.html',
-            context={'detail': ex},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
 @memo_router.post('/create_note')
-async def post_create_note(request: Request, user: dict = Depends(get_user_from_token), title: str = Form(), text: str = Form()):
+async def post_create_note(request: Request, user: dict = Depends(get_user_from_token), title: str = Form(),
+                           text: str = Form()):
     if not user:
         return
     dat = NoteData(title=title, text=text, owner_email=user['email'])
@@ -118,6 +88,37 @@ async def get_all_notes_by_user(request: Request, user: dict = Depends(get_user_
         )
     except Exception as ex:
         logger.error(f'Error in get all notes by user: {ex}')
+
+        return templates.TemplateResponse(
+            request=request,
+            name='error_page.html',
+            context={'detail': ex},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@memo_router.get('/all_notes/{note_id}')
+async def get_note_by_id(request: Request, note_id: int, user: dict = Depends(get_user_from_token)):
+    if not user:
+        return
+
+    try:
+        res = await NoteDAO.get_one_or_none(id=note_id)
+
+        if not res:
+            return templates.TemplateResponse(
+                request=request,
+                name='index_page.html',
+                context={'result': 'Note with this id does not exist'}
+            )
+
+        return templates.TemplateResponse(
+            request=request,
+            name='view_note_page.html',
+            context={'note': res, 'user': user['email']}
+        )
+    except Exception as ex:
+        logger.error(f'Error in get_note_by_id: {ex}')
 
         return templates.TemplateResponse(
             request=request,

@@ -13,5 +13,5 @@ memo_app.add_exception_handler(jwt.InvalidTokenError, inv_token)
 memo_app.add_exception_handler(jwt.ExpiredSignatureError, inv_token)
 
 
-if __name__ == '__main__':
-    uvicorn.run('main:memo_app', host='127.0.0.1', port=8000)
+# if __name__ == '__main__':
+#     uvicorn.run('main:memo_app', host='127.0.0.1', port=8000)

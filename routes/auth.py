@@ -19,7 +19,7 @@ from redis_config.redis_crud import get_session
 auth_router = APIRouter()
 templates = Jinja2Templates(directory='static/templates')
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')  # !
 SECRET_KEY = 'hzcho'
 ALGORITHM = 'HS256'
 
@@ -28,6 +28,7 @@ def create_jwt_token(data: dict):
     return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
 
 
+# @time_bench
 def get_user_from_token(token: str = Depends(oauth2_scheme)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     return payload.get('sub')
@@ -43,12 +44,12 @@ async def inv_token(request: Request, exc):
 
 
 @auth_router.get('/login', response_class=HTMLResponse)
-async def login_user(request: Request):
+async def get_login(request: Request):
     return templates.TemplateResponse(request=request, name='login_page.html', status_code=200)
 
 
 @auth_router.post('/login', response_class=RedirectResponse)
-async def login(request: Request, data: LoginUser = Form()):
+async def post_login(request: Request, data: LoginUser = Form()):
     try:
         user = await UserDAO.get_one_or_none(email=data.email)
         if not user:
@@ -130,7 +131,7 @@ async def get_create_user(request: Request):
 
 
 @auth_router.post('/create_user')
-async def create_user(request: Request, data: RegisterUser = Form()):
+async def post_create_user(request: Request, data: RegisterUser = Form()):
     try:
         await UserDAO.create_user(data)
         send_acceptance_mail.apply_async(args=[data.email])

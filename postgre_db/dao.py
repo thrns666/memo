@@ -1,10 +1,10 @@
-import traceback
 from typing import List
-from sqlalchemy.future import select
-from postgre_db.crud import async_session
-from postgre_db.models import Note, User
-from loguru import logger
 
+from loguru import logger
+from sqlalchemy.future import select
+
+from postgre_db.postgres_config import async_session
+from postgre_db.models import Note, User
 from postgre_db.schemas import RegisterUser, NoteData, LoginUser
 
 
@@ -78,7 +78,7 @@ class UserDAO(BaseDAO):
     async def create_user(cls, user_data: RegisterUser):
         async with async_session() as session:
             try:
-                user = User(name=user_data.name, email=user_data.email)
+                user = User(name=user_data.username, email=user_data.email)
                 session.add(user)
                 await session.commit()
 
