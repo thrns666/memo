@@ -10,6 +10,11 @@ class RegisterUser(BaseModel):
     email: EmailStr
 
 
+class NoteDataForm(BaseModel):
+    title: str
+    text: str
+
+
 class NoteData(BaseModel):
     title: str
     text: str

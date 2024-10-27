@@ -28,7 +28,6 @@ def create_jwt_token(data: dict):
     return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
 
 
-# @time_bench
 def get_user_from_token(token: str = Depends(oauth2_scheme)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     return payload.get('sub')
@@ -60,9 +59,15 @@ async def post_login(request: Request, data: LoginUser = Form()):
         url = request.url_for('get_password')
         return RedirectResponse(url=f'{url}?email={data.email}', status_code=status.HTTP_307_TEMPORARY_REDIRECT)
     except Exception as ex:
-        tb = traceback.format_exc()
-        logger.error(f'Error in login user: {ex} -- {tb}')
-        return HTTPException(status_code=500, detail=ex)
+        # tb = traceback.format_exc()
+        logger.error(f'Error in login user: {ex}')
+
+        return templates.TemplateResponse(
+            request=request,
+            name='error_page.html',
+            context={'detail': ex},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @auth_router.post('/password', response_class=HTMLResponse)
@@ -146,7 +151,7 @@ async def post_create_user(request: Request, data: RegisterUser = Form()):
             request=request,
             name='create_user_page.html',
             context={'result': ex},
-            status_code=status.HTTP_400_BAD_REQUEST
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 # @auth.get('/token')

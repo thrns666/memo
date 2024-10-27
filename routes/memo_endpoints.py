@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends, Form
 from loguru import logger
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
 
 from postgre_db.dao import NoteDAO
-from postgre_db.schemas import NoteData
+from postgre_db.schemas import NoteData, NoteDataForm
 from routes.auth import get_user_from_token
 
 memo_router = APIRouter()
@@ -14,7 +13,7 @@ templates = Jinja2Templates(directory='static/templates')
 
 
 @memo_router.get('/')
-async def home(request: Request):
+async def get_home(request: Request):
     return templates.TemplateResponse(
         request=request,
         name='home_page.html',
@@ -22,12 +21,8 @@ async def home(request: Request):
     )
 
 
-@memo_router.get('/index')
-async def index(request: Request, current_user: dict = Depends(get_user_from_token)):
-    if not current_user:
-        url = request.url_for('home')
-        return RedirectResponse(url=url, status_code=status.HTTP_401_UNAUTHORIZED)
-
+@memo_router.get('/user')
+async def get_index(request: Request, user: dict = Depends(get_user_from_token)):
     return templates.TemplateResponse(
         request=request,
         name='index_page.html',
@@ -37,9 +32,6 @@ async def index(request: Request, current_user: dict = Depends(get_user_from_tok
 
 @memo_router.get('/create_note')
 async def get_create_note(request: Request, user: dict = Depends(get_user_from_token)):
-    if not user:
-        return
-
     return templates.TemplateResponse(
         request=request,
         name='create_note_page.html',
@@ -48,13 +40,18 @@ async def get_create_note(request: Request, user: dict = Depends(get_user_from_t
 
 
 @memo_router.post('/create_note')
-async def post_create_note(request: Request, user: dict = Depends(get_user_from_token), title: str = Form(),
-                           text: str = Form()):
-    if not user:
-        return
-    dat = NoteData(title=title, text=text, owner_email=user['email'])
+async def post_create_note(
+        request: Request,
+        user: dict = Depends(get_user_from_token),
+        note_data: NoteDataForm = Form(),
+):
+    data = NoteData(
+        title=note_data.title,
+        text=note_data.text,
+        owner_email=user['email']
+    )
     try:
-        await NoteDAO.create_note(dat)
+        await NoteDAO.create_note(data)
 
         return templates.TemplateResponse(
             request=request,
@@ -71,7 +68,7 @@ async def post_create_note(request: Request, user: dict = Depends(get_user_from_
         )
 
 
-@memo_router.get('/all_notes')
+@memo_router.get('/note')
 async def get_all_notes_by_user(request: Request, user: dict = Depends(get_user_from_token)):
     user_email = user['email']
     try:
@@ -97,11 +94,8 @@ async def get_all_notes_by_user(request: Request, user: dict = Depends(get_user_
         )
 
 
-@memo_router.get('/all_notes/{note_id}')
+@memo_router.get('/note/{note_id}')
 async def get_note_by_id(request: Request, note_id: int, user: dict = Depends(get_user_from_token)):
-    if not user:
-        return
-
     try:
         res = await NoteDAO.get_one_or_none(id=note_id)
 

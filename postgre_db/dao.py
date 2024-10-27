@@ -12,10 +12,14 @@ class BaseDAO:
     model = None
 
     @classmethod
-    async def get_all(cls) -> List[model]:
+    async def get_all(cls) -> List[model] | None:
         async with async_session() as session:
-            result = await session.execute(select(cls.model))
-            return result.scalars().all()
+            try:
+                result = await session.execute(select(cls.model))
+                return result.scalars().all()
+            except Exception as ex:
+                logger.error(f'Error in DAO get_all: {ex}')
+                return
 
     @classmethod
     async def get_one_or_none(cls, **filters) -> model:
@@ -26,6 +30,7 @@ class BaseDAO:
             except Exception as ex:
                 # tb = traceback.format_exc()
                 logger.error(f'Error in DAO get_one: {ex}')
+                return
 
     @classmethod
     async def delete_by_id(cls, **filters):
@@ -35,9 +40,12 @@ class BaseDAO:
             try:
                 session.delete(model_obj)
                 await session.commit()
+                return model_obj
             except Exception as ex:
                 logger.error(f'Error in delete_by_id: {ex}')
                 await session.rollback()
+
+                return
 
 
 class NoteDAO(BaseDAO):
@@ -52,10 +60,11 @@ class NoteDAO(BaseDAO):
                 await session.commit()
 
                 logger.info(f'Created new note: {note_data.owner_email}')
+                return note
             except Exception as ex:
                 logger.error(f'Error in create_note: {ex}')
 
-                return
+                return None
 
     @classmethod
     async def get_all_notes_by_email(cls, user_email: LoginUser):
@@ -83,6 +92,7 @@ class UserDAO(BaseDAO):
                 await session.commit()
 
                 logger.info(f'Created new user: {user_data.email}')
+                return user
             except Exception as ex:
                 logger.error(f'Error in create_user: {ex}')
 
