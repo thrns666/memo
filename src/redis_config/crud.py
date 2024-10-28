@@ -1,7 +1,8 @@
 import traceback
 import redis.asyncio as redis
 from loguru import logger
-from redis_config.models import RedisLoginData
+
+from src.redis_config.schemas import RedisLoginData
 
 
 async def connect_to_redis():

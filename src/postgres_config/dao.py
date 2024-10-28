@@ -3,9 +3,11 @@ from typing import List
 from loguru import logger
 from sqlalchemy.future import select
 
-from postgre_db.postgres_config import async_session
-from postgre_db.models import Note, User
-from postgre_db.schemas import RegisterUser, NoteData, LoginUser
+from src.auth.models import User
+from src.auth.schemas import LoginUser, RegisterUser
+from src.notes.models import Note
+from src.notes.schemas import NoteData
+from src.postgres_config.database import async_session
 
 
 class BaseDAO:

@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 from loguru import logger
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 from pydantic import EmailStr
 
-from redis_config.models import RedisLoginData
-from redis_config.redis_crud import put_session
+from src.redis_config.crud import put_session
+from src.redis_config.schemas import RedisLoginData
 
 load_dotenv()
 
@@ -30,7 +29,7 @@ async def send_password_mail(mail_to: EmailStr, user_pass: int) -> NoReturn | No
         await put_session(data)
         await aiosmtplib.send(
             msg,
-            hostname='smtp.yandex.ru',
+            hostname='smtp_config.yandex.ru',
             port=587,
             username=smtp_login,
             password=smtp_password,
@@ -53,7 +52,7 @@ async def send_accept_mail(mail_to: EmailStr) -> NoReturn | None:
     try:
         await aiosmtplib.send(
             msg,
-            hostname='smtp.yandex.ru',
+            hostname='smtp_config.yandex.ru',
             port=587,
             username=smtp_login,
             password=smtp_password,
