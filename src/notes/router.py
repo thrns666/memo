@@ -4,12 +4,12 @@ from starlette import status
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 
-from postgre_db.dao import NoteDAO
-from postgre_db.schemas import NoteData, NoteDataForm
-from routes.auth import get_user_from_token
+from src.auth.utils import get_user_from_token
+from src.notes.schemas import NoteDataForm, NoteData
+from src.postgres_config.dao import NoteDAO
 
 memo_router = APIRouter()
-templates = Jinja2Templates(directory='static/templates')
+templates = Jinja2Templates(directory='../static/templates')
 
 
 @memo_router.get('/')

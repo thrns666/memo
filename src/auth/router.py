@@ -1,9 +1,6 @@
 import datetime
-import traceback
 
-import jwt
 from fastapi import APIRouter, HTTPException, Depends, Form
-from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 from pydantic import EmailStr
 from starlette import status
@@ -11,35 +8,13 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from celery_config.tasks import send_mail_with_pass, send_acceptance_mail
-from postgre_db.dao import UserDAO
-from postgre_db.schemas import LoginUser, RegisterUser
-from redis_config.redis_crud import get_session
+from src.auth.schemas import LoginUser, RegisterUser
+from src.auth.utils import create_jwt_token, get_user_from_token
+from src.postgres_config.dao import UserDAO
+from src.redis_config.crud import get_session
 
 auth_router = APIRouter()
-templates = Jinja2Templates(directory='static/templates')
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')  # !
-SECRET_KEY = 'hzcho'
-ALGORITHM = 'HS256'
-
-
-def create_jwt_token(data: dict):
-    return jwt.encode(payload=data, key=SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_user_from_token(token: str = Depends(oauth2_scheme)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    return payload.get('sub')
-
-
-async def inv_token(request: Request, exc):
-    return templates.TemplateResponse(
-        request=request,
-        name='error_page.html',
-        context={'detail': exc},
-        status_code=status.HTTP_401_UNAUTHORIZED
-    )
+templates = Jinja2Templates(directory='../static/templates')
 
 
 @auth_router.get('/login', response_class=HTMLResponse)

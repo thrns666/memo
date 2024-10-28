@@ -2,7 +2,8 @@ from __future__ import annotations
 import os
 from dotenv import load_dotenv
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker, AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 
@@ -15,6 +16,7 @@ async_url = URL.create(
     password=os.environ.get('DB_PASS')
 )
 
+
 engine = create_async_engine(async_url)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -22,3 +24,7 @@ async_session = async_sessionmaker(engine, expire_on_commit=False)
 async def get_session() -> AsyncSession:
     async with async_session() as session:
         yield session
+
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
