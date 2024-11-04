@@ -2,11 +2,12 @@ import traceback
 import redis.asyncio as redis
 from loguru import logger
 
+from config import settings
 from src.redis_config.schemas import RedisLoginData
 
 
 async def connect_to_redis():
-    return await redis.Redis(host='localhost', port=6379, db=0)
+    return await redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
 async def get_session(email: str):
@@ -16,7 +17,6 @@ async def get_session(email: str):
 
         if result:
             logger.info(f'Get session in redis: {result}')
-            print(result)
             return result
 
         return None

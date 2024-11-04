@@ -3,6 +3,7 @@ import uvicorn as uvicorn
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
+from ai_chat.router import chat_router
 from src.auth.exceptions import inv_token
 from src.notes.router import memo_router
 from src.auth.router import auth_router
@@ -11,6 +12,7 @@ memo_app = FastAPI()
 memo_app.mount('/static', StaticFiles(directory='../static'), name='static')
 memo_app.include_router(auth_router, prefix='/auth')
 memo_app.include_router(memo_router, prefix='')
+memo_app.include_router(chat_router, prefix='')
 memo_app.add_exception_handler(jwt.InvalidTokenError, inv_token)
 memo_app.add_exception_handler(jwt.ExpiredSignatureError, inv_token)
 

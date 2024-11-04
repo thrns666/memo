@@ -5,6 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from src.auth.models import User
+from src.notes.models import Note
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -16,7 +19,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from src.postgres_config.database import Base
+from src.postgres_config.database import *
 
 target_metadata = Base.metadata
 

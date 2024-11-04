@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block title %}
+    <title>Memo notes</title>
+    {% endblock title %}
+
+    <!-- Подключение Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Подключение шрифта Oswald  -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Общий стиль */
+        body {
+            font-family: 'Oswald', sans-serif;
+            background-color: #f4e8c1; /* Песчано-бежевый цвет фона */
+            color: #5a4d3d; /* Темный песочный цвет текста */
+            min-height: 100vh; /* Минимальная высота: 100% от высоты окна */
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar, .footer {
+            background-color: #e5d3a3; /* Бежевый цвет для Navbar и Footer */
+        }
+        .navbar-brand, .nav-link {
+            color: #5a4d3d !important; /* Цвет текста ссылок Navbar */
+        }
+        .footer {
+            color: #5a4d3d; /* Цвет текста в футере */
+            margin-top: auto; /* Отодвигает футер к нижней части */
+        }
+        a {
+            color: #8a6f49; /* Цвет ссылок */
+        }
+        .container {
+            flex: 1; /* Контент займет оставшееся пространство */
+        }
+        /* Стиль для маленького значка чата */
+        #chat-icon {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('get_home') }}">MemoNotes</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('get_home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('get_all_notes_by_user') }}">Notes</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('get_login') }}">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        {% block content %}
+        <!-- Content will be inserted here -->
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer text-center text-lg-start py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Support</h5>
+                    <p>
+                        If you need help, visit our <a href="{{ url_for('filter_us') }}">Support Page</a>.
+                    </p>
+                </div>
+                <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <p>
+                        Phone: +123 33 456 7890<br>
+                        Email: <a href="mailto:support@memonote.com">support@example.com</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center p-3" style="background-color: #e5d3a3;">
+            © 2024 MemoNotes. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
