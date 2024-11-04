@@ -1,14 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends "base.html" %}
+{% block title %}
     <title>Create Note</title>
-</head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн-чат</title>
+{% endblock title %}
 <body>
+{% block content%}
     <form>
         <input name="title" placeholder="Title">
         <input name="text" placeholder="Note text">
-        <button type="submit">Create</button>
+        <button formmethod="post" type="submit">Create</button>
     </form>
+<!-- Чат-окно -->
+        <div class="container">
+        <div class="position-fixed bottom-0 end-0 m-3" id="chat-container" style="width: 300px;">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Онлайн-чат</h5>
+                    <button class="btn btn-close btn-light btn-sm" onclick="toggleChat()" aria-label="Close"></button>
+                </div>
+                <div class="card-body" id="chat-body" style="height: 300px; overflow-y: auto;">
+                    <!-- Сообщения чата будут добавляться сюда -->
+                </div>
+                <div class="card-footer">
+                    <form id="chat-form" onsubmit="sendMessage(event)">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="message" placeholder="Введите сообщение..." required>
+                            <button type="submit" class="btn btn-primary">Отправить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Маленький значок чата -->
+    <div id="chat-icon" onclick="toggleChat()">💬</div>
+
+    <!-- Скрипт для работы с WebSocket -->
+    <script>
+        const chatContainer = document.getElementById("chat-container");
+        const chatIcon = document.getElementById("chat-icon");
+        const chatBody = document.getElementById("chat-body");
+        const messageInput = document.getElementById("message");
+
+        // Подключение к WebSocket-серверу
+        const socket = new WebSocket("ws://localhost:8000/ws"); // Укажи свой адрес WebSocket-сервера
+
+        socket.onopen = () => {
+            console.log("WebSocket соединение установлено");
+        };
+
+        socket.onmessage = (event) => {
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("p-2", "mb-2", "bg-secondary", "text-white", "rounded");
+            messageElement.innerText = "Ответ сервера: " + event.data;
+            chatBody.appendChild(messageElement);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket соединение закрыто");
+        };
+
+        socket.onerror = (error) => {
+            console.error("Ошибка WebSocket:", error);
+        };
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const messageText = messageInput.value.trim();
+
+            if (messageText) {
+                // Отправляем сообщение на сервер через WebSocket
+                socket.send(messageText);
+
+                // Отображаем отправленное сообщение в чате
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("p-2", "mb-2", "bg-light", "rounded");
+                messageElement.innerText = "Вы: " + messageText;
+                chatBody.appendChild(messageElement);
+
+                // Очистка поля ввода и прокрутка вниз
+                messageInput.value = "";
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        // Функция для скрытия/показа чата
+        function toggleChat() {
+            if (chatContainer.style.display === 'none') {
+                chatContainer.style.display = 'block';
+                chatIcon.style.display = 'none';
+            } else {
+                chatContainer.style.display = 'none';
+                chatIcon.style.display = 'flex';
+            }
+        }
+    </script>
+{% endblock content %}
 </body>
 </html>

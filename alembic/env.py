@@ -5,6 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from src.auth.models import User
+from src.notes.models import Note
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -16,8 +19,11 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from postgre_db import models
-target_metadata = models.Base.metadata
+from src.postgres_config.database import *
+
+target_metadata = Base.metadata
+
+
 # target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
@@ -53,7 +59,7 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
-    In this scenario we need to create an Engine
+    In this scenario, we need to create an Engine
     and associate a connection with the context.
 
     """

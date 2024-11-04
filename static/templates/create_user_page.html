@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends "base.html" %}
+{% block title %}
     <title>Register user</title>
-</head>
-<body>
+{% endblock title %}
+{% block content %}
     <form action="" method="post">
         <input name="email" placeholder="email">
         <input name="username" placeholder="Username">
         <button type="submit">sing up</button>
     </form>
-</body>
-</html>
+{% endblock content %}

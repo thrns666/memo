@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+{% extends "base.html" %}
+
+{% block title %}
     <title>Login page</title>
-    <link rel="stylesheet" href="../static/css/style.css">
-</head>
-<body>
+<!--    <link rel="stylesheet" href="../static/css/style.css">-->
+{% endblock title %}
+{% block content %}
     {% if user_email %}
         <form class="form" action="../auth/check_password" method="post">
             <p>Enter password for {{ user_email }}</p>
@@ -19,5 +18,4 @@
           <button class="btn" type="submit">Sign in</button>
         </form>
     {% endif %}
-</body>
-</html>
+{% endblock content %}
