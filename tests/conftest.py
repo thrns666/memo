@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from starlette.testclient import TestClient
 
 from main import memo_app
-from postgre_db.models import Base
+from postgres_config.database import Base
 
 load_dotenv()
 

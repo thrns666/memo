@@ -1,14 +1,9 @@
 import asyncio
-
 import random
-from celery import Celery
 from pydantic import EmailStr
 
+from src.celery_config.config import celery_app
 from src.smtp_config.smtp_tasks import send_password_mail, send_accept_mail
-from config import settings
-
-celery_app = Celery('celery_app', broker=f'{settings.REDIS_HOST}:{settings.REDIS_PORT}')
-celery_app.conf.task_always_eager = False
 
 
 @celery_app.task

@@ -1,4 +1,5 @@
 import datetime
+import traceback
 
 from fastapi import APIRouter, HTTPException, Depends, Form
 from loguru import logger
@@ -60,9 +61,12 @@ async def get_password(request: Request, email: EmailStr):
 async def check_password(request: Request, user_data: LoginUser = Form()):
     try:
         res: bytes = await get_session(user_data.email)
-        if res.decode() != user_data.password:
+        if not res:
+            return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='No database matches')
+        elif res.decode != user_data.password:
             return templates.TemplateResponse(
                 request=request,
+                status_code=status.HTTP_204_NO_CONTENT,
                 name='login_page.html',
                 context={'result': f'Wrong password', 'user_email': user_data.email}
             )
@@ -85,7 +89,8 @@ async def check_password(request: Request, user_data: LoginUser = Form()):
         response.set_cookie('auth_token', value, expires=3000)
         return response
     except Exception as ex:
-        logger.error(f'Error in check_password: {ex}')
+        tb = traceback.format_exc()
+        logger.error(f'Error in check_password: {ex}---{tb}')
 
         return templates.TemplateResponse(
             request=request,

@@ -1,13 +1,9 @@
 import traceback
-import redis.asyncio as redis
+
 from loguru import logger
 
-from config import settings
+from src.redis_config.config import connect_to_redis
 from src.redis_config.schemas import RedisLoginData
-
-
-async def connect_to_redis():
-    return await redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
 async def get_session(email: str):
@@ -25,13 +21,13 @@ async def get_session(email: str):
         logger.error(f'Error in redis get session: {ex}')
         return None
     finally:
-        await redis_client.close()
+        await redis_client.aclose()
 
 
 async def put_session(data: RedisLoginData):
     redis_client = await connect_to_redis()
     try:
-        await redis_client.set(data.email, data.user_password)
+        await redis_client.set(data.email, data.user_password, ex=230)
         logger.info(f'Put session in redis: {data}')
         return True
     except Exception as ex:
@@ -39,4 +35,4 @@ async def put_session(data: RedisLoginData):
         logger.error(f'Error in redis put session: {ex}')
         return None
     finally:
-        await redis_client.close()
+        await redis_client.aclose()

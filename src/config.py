@@ -16,6 +16,8 @@ class Settings:
 
     REDIS_HOST: str = os.environ.get('REDIS_HOST')
     REDIS_PORT: str = os.environ.get('REDIS_PORT')
+    REDIS_USER: str = os.environ.get('REDIS_USER')
+    REDIS_PASS: str = os.environ.get('REDIS_PASS')
 
     SMTP_LOGIN: str = os.environ.get('SMTP_LOGIN')
     SMTP_PASSWORD: str = os.environ.get('SMTP_PASSWORD')

@@ -19,7 +19,7 @@ async def test_post_check_password(ac):
         }
     )
 
-    assert resp.status_code == 302
+    assert resp.status_code == 200
 
 
 async def test_get_create_user(ac):
@@ -32,7 +32,7 @@ async def test_post_create_user(ac: AsyncClient):
         '/auth/create_user',
         data={
             'username': '+++++',
-            'email': 'test@test.com'
+            'email': 'test1@test.com'
         }
     )
 

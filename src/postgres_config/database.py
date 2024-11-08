@@ -1,21 +1,8 @@
 from __future__ import annotations
-from dotenv import load_dotenv
-from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker, AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
 
-from config import settings
-
-load_dotenv()
-
-async_url = URL.create(
-    drivername='postgresql+asyncpg',
-    host=settings.DB_HOST,
-    port=settings.DB_PORT,
-    database=settings.DB_NAME,
-    username=settings.DB_USER,
-    password=settings.DB_PASS
-)
+from postgres_config.config import async_url
 
 
 class Base(DeclarativeBase, AsyncAttrs):
