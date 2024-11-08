@@ -2,9 +2,9 @@
 {% block title %}
     <title>Create Note</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Онлайн-чат</title>
+    <title>Chat with Ai</title>
 {% endblock title %}
-<body>
+
 {% block content%}
     <form>
         <input name="title" placeholder="Title">
@@ -16,7 +16,7 @@
         <div class="position-fixed bottom-0 end-0 m-3" id="chat-container" style="width: 300px;">
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Онлайн-чат</h5>
+                    <h5 class="card-title mb-0">Chat with Ai</h5>
                     <button class="btn btn-close btn-light btn-sm" onclick="toggleChat()" aria-label="Close"></button>
                 </div>
                 <div class="card-body" id="chat-body" style="height: 300px; overflow-y: auto;">
@@ -99,5 +99,3 @@
         }
     </script>
 {% endblock content %}
-</body>
-</html>

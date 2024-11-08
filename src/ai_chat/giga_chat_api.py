@@ -39,9 +39,6 @@ class AiChat:
         if not self.__token_expire or self.__token_expire < datetime.now().timestamp():
             await self._get_access_token()
 
-        if not self.__token:
-            return
-
         try:
             self.__chat_instance = GigaChat(credentials=self.__token, scope='GIGACHAT_API_PERS', verify_ssl_certs=False)
             self.__model_response = await self.__chat_instance.ainvoke(promt)

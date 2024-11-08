@@ -1,4 +1,3 @@
-import aiosmtplib
 import traceback
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,7 +7,7 @@ import aiosmtplib
 from loguru import logger
 from pydantic import EmailStr
 
-from config import settings
+from src.config import settings
 from src.redis_config.crud import put_session
 from src.redis_config.schemas import RedisLoginData
 
