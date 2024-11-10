@@ -25,16 +25,16 @@ async def get_login(request: Request):
 
 
 @auth_router.post('/login', response_class=RedirectResponse)
-async def post_login(request: Request, data: LoginUser = Form()):
+async def post_login(request: Request, email: EmailStr = Form()):
     try:
-        user = await UserDAO.get_one_or_none(email=data.email)
+        user = await UserDAO.get_one_or_none(email=email)
         if not user:
-            logger.info(f'User {data.email} not found')
+            logger.info(f'User {email} not found')
             return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found')
 
-        send_mail_with_pass.apply_async(args=[data.email])
-        url = request.url_for('get_password')
-        return RedirectResponse(url=f'{url}?email={data.email}', status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        send_mail_with_pass.apply_async(args=[email])
+        url = request.url_for('post_password')
+        return RedirectResponse(url=f'{url}?email={email}', status_code=status.HTTP_308_PERMANENT_REDIRECT)
     except Exception as ex:
         # tb = traceback.format_exc()
         logger.error(f'Error in login user: {ex}')
@@ -48,7 +48,7 @@ async def post_login(request: Request, data: LoginUser = Form()):
 
 
 @auth_router.post('/password')
-async def get_password(request: Request, email: EmailStr):
+async def post_password(request: Request, email: EmailStr):
     return templates.TemplateResponse(
         request=request,
         name='login_page.html',
@@ -58,7 +58,7 @@ async def get_password(request: Request, email: EmailStr):
 
 
 @auth_router.post('/check_password')
-async def check_password(request: Request, user_data: LoginUser = Form()):
+async def post_check_password(request: Request, user_data: LoginUser = Form()):
     try:
         res: bytes = await get_session(user_data.email)
         if not res:
@@ -121,12 +121,9 @@ async def post_create_user(request: Request, data: RegisterUser = Form()):
             status_code=status.HTTP_201_CREATED
         )
     except Exception as ex:
-        return templates.TemplateResponse(
-            request=request,
-            name='create_user_page.html',
-            context={'result': ex},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        tb = traceback.format_exc()
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'{ex}')
+
 
 
 # dev trash

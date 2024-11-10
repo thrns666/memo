@@ -2,7 +2,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker, AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
 
-from postgres_config.config import async_url
+from src.postgres_config.config import async_url
 
 
 class Base(DeclarativeBase, AsyncAttrs):
