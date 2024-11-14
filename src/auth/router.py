@@ -4,11 +4,13 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends, Form
 from loguru import logger
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 
+from postgres_config.database import get_async_session
 from src.celery_config.tasks import send_mail_with_pass, send_acceptance_mail
 from src.auth.schemas import LoginUser, RegisterUser
 from src.auth.utils import create_jwt_token, get_user_from_token
@@ -25,9 +27,9 @@ async def get_login(request: Request):
 
 
 @auth_router.post('/login', response_class=RedirectResponse)
-async def post_login(request: Request, email: EmailStr = Form()):
+async def post_login(request: Request, email: EmailStr = Form(), session: AsyncSession = Depends(get_async_session)):
     try:
-        user = await UserDAO.get_one_or_none(email=email)
+        user = await UserDAO.get_one_or_none(session=session, email=email)
         if not user:
             logger.info(f'User {email} not found')
             return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found')
@@ -110,9 +112,13 @@ async def get_create_user(request: Request):
 
 
 @auth_router.post('/create_user')
-async def post_create_user(request: Request, data: RegisterUser = Form()):
+async def post_create_user(
+        request: Request,
+        data: RegisterUser = Form(),
+        session: AsyncSession = Depends(get_async_session)
+):
     try:
-        await UserDAO.create_user(data)
+        await UserDAO.create_user(user_data=data, session=session)
         send_acceptance_mail.apply_async(args=[data.email])
 
         return templates.TemplateResponse(
@@ -123,12 +129,3 @@ async def post_create_user(request: Request, data: RegisterUser = Form()):
     except Exception as ex:
         tb = traceback.format_exc()
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'{ex}')
-
-
-
-# dev trash
-@auth_router.get('/protected_resource')
-async def filter_us(current_user: dict = Depends(get_user_from_token)):
-    print(current_user)
-    if current_user:
-        return {1: current_user}

@@ -1,16 +1,14 @@
 import asyncio
 import os
 from typing import AsyncGenerator
-
 import pytest
 from dotenv import load_dotenv
-from httpx import AsyncClient
-from sqlalchemy import NullPool, URL, create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncEngine, AsyncSession
+from sqlalchemy import NullPool, URL
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from starlette.testclient import TestClient
-
-from main import memo_app
-from postgres_config.database import Base
+from auth.utils import get_user_from_token
+from src.main import memo_app
+from src.postgres_config.database import Base, get_async_session
 
 load_dotenv()
 
@@ -25,18 +23,9 @@ DATABASE_URL_TEST = URL.create(
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 async_session = async_sessionmaker(engine_test, expire_on_commit=False)
-Base.metadata.bind = engine_test
 
 
-async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session() as session:
-        yield session
-
-
-memo_app.dependency_overrides[async_session] = override_get_session
-
-
-@pytest.fixture(autouse=True, scope='session')
+@pytest.fixture(scope='session', autouse=True)
 async def prepare_database():
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -45,17 +34,35 @@ async def prepare_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
+async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
+        yield session
+
+
+def override_get_user_from_token():
+    return {'email': 'test@email.com'}
+
+
 @pytest.fixture(scope='session')
-def even_loop(request):
+def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
 
-client = TestClient(memo_app)
+@pytest.fixture(scope='session')
+async def ac():
+    memo_app.dependency_overrides.update(
+        {
+            get_async_session: override_get_async_session,
+            get_user_from_token: override_get_user_from_token
+         }
+    )
+
+    return TestClient(memo_app)
 
 
 @pytest.fixture(scope='session')
-async def ac() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(app=memo_app, base_url='http://test') as ac:
-        yield ac
+async def session():
+    async with async_session() as session:
+        yield session

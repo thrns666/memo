@@ -1,30 +1,31 @@
+from typing import AsyncGenerator
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.models import User
-from conftest import client, async_session
+from conftest import session, async_session
+from main import memo_app
+from postgres_config.database import get_async_session
 
 
-async def test_login_db_prpr():
-    async with async_session() as session:
-        test_model = User(name='testname', email='1@gail.com')
-        await session.add(test_model)
-        await session.commit()
+async def test_login_db_prpr(session):
+    test_model = User(name='testname', email='1@gail.com')
+    session.add(test_model)
+    await session.commit()
+
+
+async def test_post_login(ac: AsyncClient):
+    resp = await ac.post('/auth/login', data={'email': '1@gail.com'})
+
+    assert resp.status_code == 307
 
 
 async def test_get_login(ac):
     resp = await ac.get('/auth/login')
 
     assert resp.status_code == 200
-
-
-async def test_post_login(ac):
-    resp = await ac.post(
-        '/auth/login',
-        data={'email': '1@gail.com'}
-    )
-
-    assert resp.status_code == 308
 
 
 async def test_post_password(ac):
@@ -47,6 +48,7 @@ async def test_post_check_password(ac):
 
 async def test_get_create_user(ac):
     resp = await ac.get('/auth/create_user')
+
     assert resp.status_code == 200
 
 
