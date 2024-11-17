@@ -14,6 +14,12 @@ class Settings:
     DB_PASS: str = os.environ.get('DB_PASS')
     DB_NAME: str = os.environ.get('DB_NAME')
 
+    DB_HOST_TEST: str = os.environ.get('DB_HOST_TEST')
+    DB_PORT_TEST: str = os.environ.get('DB_PORT_TEST')
+    DB_USER_TEST: str = os.environ.get('DB_USER_TEST')
+    DB_PASS_TEST: str = os.environ.get('DB_PASS_TEST')
+    DB_NAME_TEST: str = os.environ.get('DB_NAME_TEST')
+
     REDIS_HOST: str = os.environ.get('REDIS_HOST')
     REDIS_PORT: str = os.environ.get('REDIS_PORT')
     REDIS_USER: str = os.environ.get('REDIS_USER')

@@ -1,44 +1,51 @@
-from typing import AsyncGenerator
-
 import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.testclient import TestClient
 
 from auth.models import User
-from conftest import session, async_session
-from main import memo_app
+from conftest import session, override_get_async_session
 from postgres_config.database import get_async_session
+from src.main import memo_app
 
 
 async def test_login_db_prpr(session):
-    test_model = User(name='testname', email='1@gail.com')
+    test_model = User(name='test_name', email='test@email.com')
     session.add(test_model)
     await session.commit()
 
 
-async def test_post_login(ac: AsyncClient):
-    resp = await ac.post('/auth/login', data={'email': '1@gail.com'})
-
-    assert resp.status_code == 307
-
-
-async def test_get_login(ac):
-    resp = await ac.get('/auth/login')
+async def test_get_login(client: TestClient):
+    resp = client.get('/auth/login')
 
     assert resp.status_code == 200
 
 
-async def test_post_password(ac):
-    resp = await ac.post('/auth/password?email=1@gail.com')
+@pytest.mark.parametrize(
+    'fastapi_dep',
+    [
+        (
+                memo_app,
+                {get_async_session: override_get_async_session}
+        )
+    ],
+    indirect=True
+)
+async def test_post_login(client: TestClient, fastapi_dep):
+    resp = client.post('/auth/login', data={'email': 'test@email.com'})
 
     assert resp.status_code == 200
 
 
-async def test_post_check_password(ac):
-    resp = await ac.post(
+async def test_post_password(client: TestClient):
+    resp = client.post('/auth/password?email=test@email.com')
+
+    assert resp.status_code == 200
+
+
+async def test_post_check_password(client: TestClient):
+    resp = client.post(
         '/auth/check_password',
         data={
-            'email': '1@gail.com',
+            'email': 'test@email.com',
             'password': '000000'
         }
     )
@@ -46,14 +53,24 @@ async def test_post_check_password(ac):
     assert resp.status_code == 200
 
 
-async def test_get_create_user(ac):
-    resp = await ac.get('/auth/create_user')
+async def test_get_create_user(client: TestClient):
+    resp = client.get('/auth/create_user')
 
     assert resp.status_code == 200
 
 
-async def test_post_create_user(ac: AsyncClient):
-    resp = await ac.post(
+@pytest.mark.parametrize(
+    'fastapi_dep',
+    [
+        (
+                memo_app,
+                {get_async_session: override_get_async_session}
+        )
+    ],
+    indirect=True
+)
+async def test_post_create_user(client: TestClient, fastapi_dep):
+    resp = client.post(
         '/auth/create_user',
         data={
             'username': '+++++',

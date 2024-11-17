@@ -26,7 +26,7 @@ async def get_login(request: Request):
     return templates.TemplateResponse(request=request, name='login_page.html', status_code=status.HTTP_200_OK)
 
 
-@auth_router.post('/login', response_class=RedirectResponse)
+@auth_router.post('/login')
 async def post_login(request: Request, email: EmailStr = Form(), session: AsyncSession = Depends(get_async_session)):
     try:
         user = await UserDAO.get_one_or_none(session=session, email=email)
@@ -129,3 +129,11 @@ async def post_create_user(
     except Exception as ex:
         tb = traceback.format_exc()
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'{ex}')
+
+
+@auth_router.get('/help')
+async def filter_us(
+        request: Request,
+        session: AsyncSession = Depends(get_async_session)
+):
+    return 'ok'

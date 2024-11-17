@@ -6,6 +6,7 @@ from src.postgres_config.database import Base
 
 class Note(Base):
     __tablename__ = 'note'
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(150))

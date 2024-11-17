@@ -1,24 +1,24 @@
 import asyncio
-import os
+import datetime
 from typing import AsyncGenerator
+
 import pytest
-from dotenv import load_dotenv
 from sqlalchemy import NullPool, URL
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from starlette.testclient import TestClient
-from auth.utils import get_user_from_token
-from src.main import memo_app
-from src.postgres_config.database import Base, get_async_session
 
-load_dotenv()
+from auth.utils import create_jwt_token
+from config import settings
+from src.main import memo_app
+from src.postgres_config.database import Base
 
 DATABASE_URL_TEST = URL.create(
     drivername='postgresql+asyncpg',
-    host=os.environ.get('DB_HOST_TEST'),
-    port=os.environ.get('DB_PORT_TEST'),
-    database=os.environ.get('DB_NAME_TEST'),
-    username=os.environ.get('DB_USER_TEST'),
-    password=os.environ.get('DB_PASS_TEST')
+    host=settings.DB_HOST_TEST,
+    port=settings.DB_PORT_TEST,
+    database=settings.DB_NAME_TEST,
+    username=settings.DB_USER_TEST,
+    password=settings.DB_PASS_TEST
 )
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
@@ -39,10 +39,6 @@ async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-def override_get_user_from_token():
-    return {'email': 'test@email.com'}
-
-
 @pytest.fixture(scope='session')
 def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -51,14 +47,7 @@ def event_loop(request):
 
 
 @pytest.fixture(scope='session')
-async def ac():
-    memo_app.dependency_overrides.update(
-        {
-            get_async_session: override_get_async_session,
-            get_user_from_token: override_get_user_from_token
-         }
-    )
-
+async def client():
     return TestClient(memo_app)
 
 
@@ -66,3 +55,15 @@ async def ac():
 async def session():
     async with async_session() as session:
         yield session
+
+
+@pytest.fixture()
+def jwt_login():
+    token_data = {
+        'sub': {
+            'email': 'test@email.com',
+        },
+        'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=3000)
+    }
+    auth_token = create_jwt_token(token_data)
+    return auth_token
