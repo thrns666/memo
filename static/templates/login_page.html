@@ -5,6 +5,9 @@
 <!--    <link rel="stylesheet" href="../static/css/style.css">-->
 {% endblock title %}
 {% block content %}
+    {% if result %}
+        <p><strong>{{ result }}</strong></p>
+    {% endif %}
     {% if user_email %}
         <form class="form" action="../auth/check_password" method="post">
             <p>Enter password for {{ user_email }}</p>

@@ -63,9 +63,10 @@ async def post_password(request: Request, email: EmailStr):
 async def post_check_password(request: Request, user_data: LoginUser = Form()):
     try:
         res: bytes = await get_session(user_data.email)
+        b_pass = bytes(str(user_data.password), encoding='UTF-8')
         if not res:
             return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='No database matches')
-        elif res.decode != user_data.password:
+        elif res != b_pass:
             return templates.TemplateResponse(
                 request=request,
                 status_code=status.HTTP_204_NO_CONTENT,
