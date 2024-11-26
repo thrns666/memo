@@ -16,23 +16,23 @@ Asyncpg
 _____
 ## Структура проекта
 
-src/ — исходный код приложения.
-alembic/ — управление миграциями базы данных.
-static/ — статические файлы.
-tests/ — тесты для проверки функциональности.
+- src/ — исходный код приложения.
+- alembic/ — управление миграциями базы данных.
+- static/ — статические файлы.
+- tests/ — тесты для проверки функциональности.
 _____
 ## Установка
 
 ### Клонируйте репозиторий:
 
-git clone https://github.com/thrns666/memo
-cd memo-dev
+- git clone https://github.com/thrns666/memo
+- cd memo-dev
 
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 ### Запуск локально:
 
-redis-server
-celery -A celery_config.tasks:celery_app worker --loglevel=INFO --pool=solo
-python src/main.py
+- redis-server
+- celery -A celery_config.tasks:celery_app worker --loglevel=INFO --pool=solo
+- python src/main.py
 _____
