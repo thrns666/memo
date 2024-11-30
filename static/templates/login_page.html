@@ -2,23 +2,24 @@
 
 {% block title %}
     <title>Login page</title>
-<!--    <link rel="stylesheet" href="../static/css/style.css">-->
 {% endblock title %}
 {% block content %}
     {% if result %}
         <p><strong>{{ result }}</strong></p>
     {% endif %}
     {% if user_email %}
-        <form class="form" action="../auth/check_password" method="post">
+        <form class="form" action="{{ url_for('post_check_password') }}" method="post">
             <p>Enter password for {{ user_email }}</p>
             <input type="hidden" name="email" value="{{ user_email }}">
             <input name="password" class="input" type="text" placeholder="000-000">
             <button class="btn" type="submit">Sign in</button>
         </form>
     {% else %}
-        <form class="form" action="" method="post">
+        <form class="form" action="{{ url_for('post_login') }}" method="post">
           <input name="email" class="input" type="text" placeholder="email">
           <button class="btn" type="submit">Sign in</button>
         </form>
     {% endif %}
+
+<p>or <a href="{{ url_for('get_create_user') }}">register</a> account</p>
 {% endblock content %}

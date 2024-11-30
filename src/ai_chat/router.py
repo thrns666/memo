@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from starlette.websockets import WebSocket
 
-from ai_chat.giga_chat_api import AiChat
+from src.ai_chat.giga_chat_api import AiChat
 
 chat_router = APIRouter()
 

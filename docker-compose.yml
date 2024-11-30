@@ -3,7 +3,7 @@ services:
   db:
     image: postgres:15
     container_name: postgres_db
-    command: : -p 5555
+ #   command: : -p 5555
     expose:
       - 5555
 #    env_file:

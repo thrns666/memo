@@ -6,7 +6,7 @@ from aiohttp import BasicAuth
 from langchain_community.chat_models import GigaChat
 from langchain_core.messages import AIMessage
 from loguru import logger
-from config import settings
+from src.config import settings
 
 
 class AiChat:

@@ -3,7 +3,7 @@ import uvicorn as uvicorn
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
-from ai_chat.router import chat_router
+from src.ai_chat.router import chat_router
 from src.auth.exceptions import inv_token
 from src.notes.router import memo_router
 from src.auth.router import auth_router

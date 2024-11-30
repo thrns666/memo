@@ -8,6 +8,6 @@ async def inv_token(request: Request, exc):
     return templates.TemplateResponse(
         request=request,
         name='error_page.html',
-        context={'detail': exc},
+        context={'detail': 401},
         status_code=status.HTTP_401_UNAUTHORIZED
     )

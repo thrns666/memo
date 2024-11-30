@@ -90,7 +90,7 @@ async def test_post_create_note(client: TestClient, fastapi_dep, jwt_login):
     indirect=True
 )
 async def test_get_all_notes_by_user(client: TestClient, fastapi_dep, jwt_login):
-    resp = client.get('/note', cookies={'auth_token': jwt_login})
+    resp = client.get('/notes', cookies={'auth_token': jwt_login})
 
     assert resp.status_code == 200
 
@@ -106,9 +106,9 @@ async def test_get_all_notes_by_user(client: TestClient, fastapi_dep, jwt_login)
     indirect=True
 )
 async def test_get_note_by_id(client: TestClient, fastapi_dep, jwt_login):
-    resp = client.get('/note/1', cookies={'auth_token': jwt_login})
-    resp_inv = client.get('/note/!', cookies={'auth_token': jwt_login})
-    resp_inv_id = client.get('/note/000000', cookies={'auth_token': jwt_login})
+    resp = client.get('/notes/1', cookies={'auth_token': jwt_login})
+    resp_inv = client.get('/notes/!', cookies={'auth_token': jwt_login})
+    resp_inv_id = client.get('/notes/000000', cookies={'auth_token': jwt_login})
 
     assert resp.status_code == 200
     assert resp_inv.status_code == 422
