@@ -5,6 +5,7 @@ from starlette import status
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 
+from notes.models import Note
 from src.postgres_config.database import get_async_session
 from src.auth.utils import get_user_from_token
 from src.notes.schemas import NoteDataForm, NoteData
@@ -113,9 +114,16 @@ async def get_note_by_id(
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
-        res = await NoteDAO.get_one_or_none(id=note_id, session=session)
+        res: Note = await NoteDAO.get_one_or_none(id=note_id, session=session)
 
-        if not res:
+        if res and user.get('email') != res.owner_email:
+            return templates.TemplateResponse(
+                request=request,
+                name='index_page.html',
+                context={'result': 'This user dont have notes with this id', 'user': user.get('email')},
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+        elif not res:
             return templates.TemplateResponse(
                 request=request,
                 name='index_page.html',

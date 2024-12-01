@@ -24,7 +24,7 @@ class AiChat:
             'RqUID': str(uuid4())
         }
         payload = {'scope': 'GIGACHAT_API_PERS'}
-        auth = BasicAuth(settings.giga_chat_client_id, settings.giga_chat_client_secret)
+        auth = BasicAuth(settings.GIGA_CHAT_CLIENT_ID, settings.GIGA_CHAT_CLIENT_SECRET)
 
         async with aiohttp.ClientSession() as session:
             async with session.post(base_url, headers=headers, data=payload, auth=auth, ssl=False) as resp:
@@ -45,6 +45,6 @@ class AiChat:
 
             return self.__model_response.content
         except Exception as ex:
-            logger.error(f'Error in post_promt: {ex}')
+            logger.error(f'Error in post_prompt: {ex}')
 
             return
