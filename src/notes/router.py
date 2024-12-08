@@ -209,4 +209,5 @@ async def get_create_share_link(
     except Exception as ex:
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'{ex}')
 
-# Need: - realize editing user notes, change encode from base64 → JWT with expire date
+# Need: - realize editing user notes, change encoding from base64 → JWT with expiry date
+# Celery tasks for send email: set max retry - 2 times
