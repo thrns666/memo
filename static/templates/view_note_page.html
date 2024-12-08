@@ -4,8 +4,54 @@
     <title>{{ note.title }}</title>
 {% endblock title %}
 {% block content %}
+<strong>{{ note.title }}</strong>
+    <br>
     {{ note.text }}
-    <p>
-        <button>create share link</button>
-    </p>
+    {% if user %}
+        <button id="shareLinkButton">Create Share Link</button>
+    {% endif %}
+<!-- Всплывающее окно для ссылки -->
+    <div id="linkModal"
+         style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); padding:20px; background-color:#fff; border:1px solid #ccc; z-index:1000; box-shadow:0 4px 8px rgba(0,0,0,0.25);">
+        <p>Your share link:</p>
+        <input type="text" id="sharedLinkInput" readonly/>
+        <br><br>
+        <button onclick="closeModal()">Close</button>
+    </div>
+
+<!-- Скрипт -->
+<script>
+    <!--                // Функция для отправки запроса на сервер-->
+            function createShareLink() {
+    <!--            // Отправляем GET-запрос на сервер-->
+                fetch('/notes/{{ note.id }}/create_share_link_for_note')
+                    .then(response => response.json()) // Парсим ответ как JSON
+                    .then(data => {
+                        if (data.success) { // Если запрос успешен
+                            const sharedLink = data.link; // Получаем ссылку из ответа сервера
+                            showSharedLink(sharedLink);
+                        } else {
+                            alert("Failed to generate share link.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("An error occurred while generating the share link.");
+                    });
+            }
+
+    <!--        // Функция для показа модального окна со ссылкой-->
+            function showSharedLink(link) {
+                document.getElementById('sharedLinkInput').value = link;
+                document.getElementById('linkModal').style.display = 'block'; // Показываем модальное окно
+            }
+
+    <!--        // Функция для закрытия модального окна-->
+            function closeModal() {
+                document.getElementById('linkModal').style.display = 'none'; // Скрываем модальное окно
+            }
+
+    <!--        // Добавление обработчика события на кнопку-->
+            document.getElementById('shareLinkButton').addEventListener('click', createShareLink);
+</script>
 {% endblock content %}

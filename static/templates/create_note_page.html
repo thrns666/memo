@@ -7,8 +7,10 @@
 
 {% block content%}
     <form>
-        <input name="title" placeholder="Title">
-        <input name="text" placeholder="Note text">
+        <input name="title" type="text" style="width: 500px; height: 30px;" placeholder="Title">
+        <p>
+            <textarea name="text" style="width: 500px; height: 90px;" placeholder="Note text"></textarea>
+        </p>
         <button formmethod="post" type="submit">Create</button>
     </form>
 <!-- Чат-окно -->
