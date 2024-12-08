@@ -6,9 +6,17 @@
     <p>
         <big>OOOOPPPSSSS....</big>
     </p>
+    {% if detail == 401 %}
+    <p>
+        <strong>
+            Please, <a href="{{ url_for('get_login') }}">login</a> or <a href="{{ url_for('get_create_user') }}">create</a> account
+        </strong>
+    </p>
+    {% else %}
     <p>
         <strong>
             {{ detail }}
         </strong>
     </p>
+    {% endif %}
 {% endblock content %}

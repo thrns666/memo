@@ -11,6 +11,7 @@ aiosmtplib~=3.0.2
 asyncpg
 pydantic_core
 jinja2
+pytest-fastapi-deps
 python-multipart
 pydantic[email]
 PyJWT~=2.9.0

@@ -7,8 +7,8 @@ from sqlalchemy import NullPool, URL
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from starlette.testclient import TestClient
 
-from auth.utils import create_jwt_token
-from config import settings
+from src.auth.utils import create_jwt_token
+from src.config import settings
 from src.main import memo_app
 from src.postgres_config.database import Base
 

@@ -10,11 +10,11 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from postgres_config.database import get_async_session
-from src.celery_config.tasks import send_mail_with_pass, send_acceptance_mail
 from src.auth.schemas import LoginUser, RegisterUser
 from src.auth.utils import create_jwt_token, get_user_from_token
+from src.celery_config.tasks import send_mail_with_pass, send_acceptance_mail
 from src.postgres_config.dao import UserDAO
+from src.postgres_config.database import get_async_session
 from src.redis_config.crud import get_session
 
 auth_router = APIRouter()
@@ -32,7 +32,11 @@ async def post_login(request: Request, email: EmailStr = Form(), session: AsyncS
         user = await UserDAO.get_one_or_none(session=session, email=email)
         if not user:
             logger.info(f'User {email} not found')
-            return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found')
+            return templates.TemplateResponse(
+                request=request, name='login_page.html',
+                status_code=status.HTTP_404_NOT_FOUND,
+                context={'result': f'User {email} not found'}
+            )
 
         send_mail_with_pass.apply_async(args=[email])
         url = request.url_for('post_password')
@@ -60,23 +64,26 @@ async def post_password(request: Request, email: EmailStr):
 
 
 @auth_router.post('/check_password')
-async def post_check_password(request: Request, user_data: LoginUser = Form()):
+async def post_check_password(request: Request, user_data: LoginUser = Form(), session: AsyncSession = Depends(get_async_session)):
     try:
         res: bytes = await get_session(user_data.email)
+        b_pass = bytes(str(user_data.password), encoding='UTF-8')
         if not res:
             return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='No database matches')
-        elif res.decode != user_data.password:
+        elif res != b_pass:
             return templates.TemplateResponse(
                 request=request,
                 status_code=status.HTTP_204_NO_CONTENT,
                 name='login_page.html',
                 context={'result': f'Wrong password', 'user_email': user_data.email}
             )
+        user = await UserDAO.get_one_or_none(session=session, email=user_data.email)
 
         value = create_jwt_token(
             {
                 'sub': {
                     'email': user_data.email,
+                    'username': user.name
                 },
                 'exp': datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=3000)
             }
@@ -88,7 +95,7 @@ async def post_check_password(request: Request, user_data: LoginUser = Form()):
             context={'exmp': 'test successful login'},
             status_code=status.HTTP_302_FOUND,
         )
-        response.set_cookie('auth_token', value, expires=3000)
+        response.set_cookie('auth_token', value, expires=3000, httponly=True, samesite='lax', secure=False)
         return response
     except Exception as ex:
         tb = traceback.format_exc()
@@ -100,6 +107,17 @@ async def post_check_password(request: Request, user_data: LoginUser = Form()):
             context={'detail': ex},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@auth_router.get('/logout')
+async def get_logout(request: Request, user: dict = Depends(get_user_from_token)):
+    response = templates.TemplateResponse(
+        request=request,
+        name='home_page.html'
+    )
+    response.delete_cookie('auth_token', path='/')
+
+    return response
 
 
 @auth_router.get('/create_user')
